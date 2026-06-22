@@ -6,9 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   FileText,
-  Brain,
-  Layers,
-  HelpCircle,
+  BookOpen,
   Settings,
   Menu,
   X,
@@ -16,11 +14,9 @@ import {
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Documents', href: '/dashboard/documents', icon: FileText },
-  { label: 'Summaries', href: '/dashboard/summaries', icon: Brain },
-  { label: 'Flashcards', href: '/dashboard/flashcards', icon: Layers },
-  { label: 'Quizzes', href: '/dashboard/quizzes', icon: HelpCircle },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, soon: false },
+  { label: 'Subjects', href: '/dashboard/subjects', icon: BookOpen, soon: false },
+  { label: 'Documents', href: '/dashboard/documents', icon: FileText, soon: false },
 ] as const
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -72,6 +68,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               href={item.href}
               icon={<item.icon className="w-4 h-4 shrink-0" />}
               exact={item.href === '/dashboard'}
+              soon={item.soon}
               onClick={() => setSidebarOpen(false)}
             >
               {item.label}
@@ -128,32 +125,45 @@ function SidebarLink({
   icon,
   children,
   exact = false,
+  soon = false,
   onClick,
 }: {
   href: string
   icon: React.ReactNode
   children: React.ReactNode
   exact?: boolean
+  soon?: boolean
   onClick: () => void
 }) {
   const pathname = usePathname()
   const isActive = exact ? pathname === href : pathname.startsWith(href)
 
+  const className = [
+    'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
+    soon
+      ? 'text-[#94A3B8] dark:text-[#6B7280] cursor-default pointer-events-none'
+      : isActive
+        ? 'bg-[#EEF4FF] text-[#0050D8] dark:bg-[#0050D8]/15 dark:text-[#5B8FFF] font-medium'
+        : 'text-[#64748B] dark:text-[#A0A0A0] hover:text-[#0F172A] dark:hover:text-white hover:bg-[#F1F5F9] dark:hover:bg-[#2F2F2F]',
+  ].join(' ')
+
   return (
     <Link
       href={href}
-      onClick={onClick}
-      className={[
-        'flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors',
-        isActive
-          ? 'bg-[#EEF4FF] text-[#0050D8] dark:bg-[#0050D8]/15 dark:text-[#5B8FFF] font-medium'
-          : 'text-[#64748B] dark:text-[#A0A0A0] hover:text-[#0F172A] dark:hover:text-white hover:bg-[#F1F5F9] dark:hover:bg-[#2F2F2F]',
-      ].join(' ')}
+      onClick={soon ? (e) => e.preventDefault() : onClick}
+      aria-disabled={soon || undefined}
+      tabIndex={soon ? -1 : undefined}
+      className={className}
     >
-      <span className={isActive ? 'text-[#0050D8] dark:text-[#5B8FFF]' : 'text-[#94A3B8] dark:text-[#6B7280]'}>
+      <span className={soon ? 'text-[#CBD5E1] dark:text-[#4B5563]' : isActive ? 'text-[#0050D8] dark:text-[#5B8FFF]' : 'text-[#94A3B8] dark:text-[#6B7280]'}>
         {icon}
       </span>
-      {children}
+      <span className="flex-1">{children}</span>
+      {soon && (
+        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[#F1F5F9] dark:bg-[#2F2F2F] text-[#94A3B8] dark:text-[#6B7280] tracking-wide">
+          soon
+        </span>
+      )}
     </Link>
   )
 }
